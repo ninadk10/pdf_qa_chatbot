@@ -13,7 +13,7 @@ class QAEngine:
         self.index.add(np.array(self.embeddings))
 
     def _parse_pdf(self, path):
-        doc = fitz.open(path)
+        doc = pymupdf.open(path)
         full_text = " ".join([page.get_text() for page in doc])
         return [full_text[i:i+500] for i in range(0, len(full_text), 500)]
 
