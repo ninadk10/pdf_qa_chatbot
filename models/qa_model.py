@@ -1,7 +1,7 @@
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 
 class LocalLLM:
-    def __init__(self, model_name="distilgpt2"):
+    def __init__(self, model_name="tiiuae/falcon-7b-instruct"):
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model = AutoModelForCausalLM.from_pretrained(model_name)
         self.pipe = pipeline("text-generation", model=self.model, tokenizer=self.tokenizer)
