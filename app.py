@@ -14,7 +14,7 @@ def load_embedder():
 
 @st.cache_resource
 def load_generator():
-    return pipeline("text-generation", model="distilgpt2")
+    return pipeline("text-generation", model="google/flan-t5-base")
 
 # Build vector index from PDF
 @st.cache_resource
