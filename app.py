@@ -10,11 +10,11 @@ import os
 
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
-# Get the token from the environment variable
-hf_token = os.environ.get("HF_TOKEN")
+# # Get the token from the environment variable
+# hf_token = os.environ.get("HF_TOKEN")
 
-if hf_token is None:
-    raise ValueError("Hugging Face token not found. Please ensure it's in a .env file or set as an environment variable.")
+# if hf_token is None:
+#     raise ValueError("Hugging Face token not found. Please ensure it's in a .env file or set as an environment variable.")
 
 MODEL_ID = "mistralai/Mistral-7B-Instruct-v0.2"
 
@@ -23,9 +23,29 @@ MODEL_ID = "mistralai/Mistral-7B-Instruct-v0.2"
 def load_embedder():
     return SentenceTransformer("all-MiniLM-L6-v2")
 
-@st.cache_resource
+@st.cache_resource # Use st.cache_resource to avoid re-initializing on every rerun
 def load_hf_client():
-    return InferenceClient(model=MODEL_ID, token=hf_token)
+    hf_token = os.environ.get("HF_TOKEN")
+    if hf_token is None:
+        st.error("Hugging Face token not found. Please set the HF_TOKEN secret in Streamlit Cloud.")
+        st.stop() # Stop the app if token is missing
+
+    # --- CHANGE THIS LINE ---
+    # Use a model known to be available on the Hugging Face Inference API for text generation
+    # You can also omit 'model' here if you pass it directly in text_generation call,
+    # but it's often good to initialize the client with a default model.
+    model_id = "mistralai/Mistral-7B-Instruct-v0.2" # Or "gpt2", "google/gemma-2b", etc.
+
+    st.write(f"Attempting to load Hugging Face Inference Client for model: {model_id}") # For debugging
+
+    try:
+        client = InferenceClient(model=model_id, token=hf_token)
+        st.success(f"Successfully initialized Hugging Face Inference Client for {model_id}") # For debugging
+        return client
+    except Exception as e:
+        st.error(f"Failed to initialize Hugging Face Inference Client for {model_id}: {e}")
+        st.stop()
+
 
 # Build FAISS index
 @st.cache_resource
