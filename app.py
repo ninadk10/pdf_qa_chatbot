@@ -6,9 +6,10 @@ from sentence_transformers import SentenceTransformer
 from huggingface_hub import InferenceClient
 import tempfile
 import os
+import config
 
 # Add your Hugging Face token here
-HF_TOKEN = "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"
+HF_TOKEN = config.token
 MODEL_ID = "mistralai/Mistral-7B-Instruct-v0.1"
 
 # Load models
