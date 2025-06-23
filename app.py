@@ -7,8 +7,6 @@ from huggingface_hub import InferenceClient
 import tempfile
 import os
 
-# Load environment variables from .env file
-load_dotenv()
 
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
