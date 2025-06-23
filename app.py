@@ -7,9 +7,19 @@ from huggingface_hub import InferenceClient
 import tempfile
 import os
 import config
+from dotenv import load_dotenv # Import this at the very beginning of your script
 
-# Add your Hugging Face token here
-HF_TOKEN = config.token
+# Load environment variables from .env file
+load_dotenv()
+
+from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
+
+# Get the token from the environment variable
+hf_token = os.environ.get("HF_TOKEN")
+
+if hf_token is None:
+    raise ValueError("Hugging Face token not found. Please ensure it's in a .env file or set as an environment variable.")
+
 MODEL_ID = "mistralai/Mistral-7B-Instruct-v0.1"
 
 # Load models
@@ -19,7 +29,7 @@ def load_embedder():
 
 @st.cache_resource
 def load_hf_client():
-    return InferenceClient(model=MODEL_ID, token=HF_TOKEN)
+    return InferenceClient(model=MODEL_ID, token=hf_token)
 
 # Build FAISS index
 @st.cache_resource
