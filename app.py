@@ -6,7 +6,6 @@ from sentence_transformers import SentenceTransformer
 from huggingface_hub import InferenceClient
 import tempfile
 import os
-from dotenv import load_dotenv # Import this at the very beginning of your script
 
 # Load environment variables from .env file
 load_dotenv()
