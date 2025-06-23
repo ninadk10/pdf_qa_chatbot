@@ -34,7 +34,7 @@ def load_hf_client():
     # Use a model known to be available on the Hugging Face Inference API for text generation
     # You can also omit 'model' here if you pass it directly in text_generation call,
     # but it's often good to initialize the client with a default model.
-    model_id = "openai-community/gpt2" # Or "gpt2", "google/gemma-2b", etc.
+    model_id = "deepseek-ai/DeepSeek-R1-0528" # Or "gpt2", "google/gemma-2b", etc.
 
     st.write(f"Attempting to load Hugging Face Inference Client for model: {model_id}") # For debugging
 
