@@ -23,29 +23,28 @@ MODEL_ID = "mistralai/Mistral-7B-Instruct-v0.2"
 def load_embedder():
     return SentenceTransformer("all-MiniLM-L6-v2")
 
-@st.cache_resource # Use st.cache_resource to avoid re-initializing on every rerun
+@st.cache_resource
 def load_hf_client():
+    st.info("Step 1: Inside load_hf_client.")
     hf_token = os.environ.get("HF_TOKEN")
     if hf_token is None:
         st.error("Hugging Face token not found. Please set the HF_TOKEN secret in Streamlit Cloud.")
-        st.stop() # Stop the app if token is missing
+        st.stop()
+    else:
+        st.info("Step 2: HF_TOKEN found in environment.")
+        # st.write(f"HF Token length: {len(hf_token)}") # You can print length to confirm it's not empty, but don't print actual token!
 
-    # --- CHANGE THIS LINE ---
-    # Use a model known to be available on the Hugging Face Inference API for text generation
-    # You can also omit 'model' here if you pass it directly in text_generation call,
-    # but it's often good to initialize the client with a default model.
-    model_id = "gpt2" # Or "gpt2", "google/gemma-2b", etc.
+    model_id = "gpt2" # Still stick with gpt2 for now
 
-    st.write(f"Attempting to load Hugging Face Inference Client for model: {model_id}") # For debugging
+    st.info(f"Step 3: Attempting to load Hugging Face Inference Client for model: `{model_id}`")
 
     try:
         client = InferenceClient(model=model_id, token=hf_token)
-        st.success(f"Successfully initialized Hugging Face Inference Client for {model_id}") # For debugging
+        st.success(f"Step 4: Successfully initialized Hugging Face Inference Client for `{model_id}`")
         return client
     except Exception as e:
-        st.error(f"Failed to initialize Hugging Face Inference Client for {model_id}: {e}")
+        st.error(f"Step 5: Failed to initialize Hugging Face Inference Client for `{model_id}`: {e}")
         st.stop()
-
 
 # Build FAISS index
 @st.cache_resource
