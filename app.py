@@ -16,7 +16,7 @@ hf_token = os.environ.get("HF_TOKEN")
 if hf_token is None:
     raise ValueError("Hugging Face token not found. Please ensure it's in a .env file or set as an environment variable.")
 
-MODEL_ID = "openai-community/gpt2"
+MODEL_ID = "mistralai/Mistral-7B-Instruct-v0.2"
 
 # Load models
 @st.cache_resource
