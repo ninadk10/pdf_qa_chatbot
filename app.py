@@ -16,7 +16,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 # if hf_token is None:
 #     raise ValueError("Hugging Face token not found. Please ensure it's in a .env file or set as an environment variable.")
 
-MODEL_ID = "gpt2"
+MODEL_ID = "HuggingFaceH4/zephyr-7b-beta"
 
 # Load models
 @st.cache_resource
