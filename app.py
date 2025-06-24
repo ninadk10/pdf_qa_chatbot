@@ -39,7 +39,7 @@ def load_hf_client():
     st.info(f"Step 3: Attempting to load Hugging Face Inference Client for model: `{model_id}`")
 
     try:
-        client = InferenceClient(model=model_id, token=hf_token)
+        client = InferenceClient(provider="featherless-ai", model=model_id, token=hf_token)
         st.success(f"Step 4: Successfully initialized Hugging Face Inference Client for `{model_id}`")
         return client
     except Exception as e:
@@ -84,7 +84,7 @@ if uploaded_file:
             context = retrieve_context(question, chunks, index)
             client = load_hf_client()
             prompt = f"[INST] Use the following context to answer the question:\n\n{context}\n\nQuestion: {question}\nAnswer: [/INST]"
-            response = client.conversational(prompt, max_new_tokens=200, temperature=0.7)
+            response = client.chat.completions.create(prompt, max_new_tokens=200, temperature=0.7)
             st.markdown("### ✅ Answer:")
             st.write(response.strip())
     os.remove(tmp_path)
