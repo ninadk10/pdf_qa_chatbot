@@ -65,6 +65,14 @@ def retrieve_context(question, chunks, index):
     D, I = index.search(np.array(q_vec), k=3)
     return " ".join([chunks[i] for i in I[0]])
 
+
+# Initialize conversation history
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = [
+        {"role": "system", "content": "You are a helpful assistant that answers questions based on PDF context."}
+    ]
+
+
 # Streamlit UI
 st.title("PDF Q&A Bot (Hugging Face Hosted Model)")
 uploaded_file = st.file_uploader("Upload a PDF", type="pdf")
@@ -74,19 +82,28 @@ if uploaded_file:
         tmp_file.write(uploaded_file.read())
         tmp_path = tmp_file.name
 
-    with st.spinner("🔍 Reading and indexing PDF..."):
+    with st.spinner("Reading and indexing PDF..."):
         chunks, index = build_index(tmp_path)
-    st.success("✅ PDF processed. Ask your question!")
+    st.success("PDF processed. Ask your question!")
 
-    question = st.text_input("❓ Enter your question:")
+    question = st.text_input("Enter your question:")
     if question:
-        with st.spinner("💬 Generating answer..."):
+        with st.spinner("Generating answer..."):
             context = retrieve_context(question, chunks, index)
+            augmented_question = f"Context:\n{context}\n\nQuestion:\n{question}"
+            st.session_state.chat_history.append({"role": "user", "content": augmented_question})
+
             client = load_hf_client()
             prompt = f"[INST] Use the following context to answer the question:\n\n{context}\n\nQuestion: {question}\nAnswer: [/INST]"
-            response = client.chat.completions.create(prompt, max_tokens=200, temperature=0.7)
-            st.markdown("### ✅ Answer:")
-            st.write(response.strip())
+            # response = client.chat.completions.create(prompt, max_tokens=200, temperature=0.7)
+            response = client.conversational(messages=st.session_state.chat_history)
+            assistant_reply = response["choices"][0]["message"]["content"]
+            st.session_state.chat_history.append({"role": "assistant", "content": assistant_reply})
+            for msg in st.session_state.chat_history:
+                if msg["role"] != "system":
+                    st.markdown(f"**{msg['role'].capitalize()}**: {msg['content']}")
+            # st.markdown("### Answer:")
+            # st.write(response.strip())
     os.remove(tmp_path)
 
 # test
