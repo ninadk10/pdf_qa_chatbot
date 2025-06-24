@@ -16,7 +16,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 # if hf_token is None:
 #     raise ValueError("Hugging Face token not found. Please ensure it's in a .env file or set as an environment variable.")
 
-MODEL_ID = "mistralai/Mistral-7B-Instruct-v0.2"
+MODEL_ID = "gpt2"
 
 # Load models
 @st.cache_resource
@@ -34,7 +34,7 @@ def load_hf_client():
         st.info("Step 2: HF_TOKEN found in environment.")
         # st.write(f"HF Token length: {len(hf_token)}") # You can print length to confirm it's not empty, but don't print actual token!
 
-    model_id = "gpt2" # Still stick with gpt2 for now
+    model_id = MODEL_ID # Still stick with gpt2 for now
 
     st.info(f"Step 3: Attempting to load Hugging Face Inference Client for model: `{model_id}`")
 
