@@ -84,10 +84,9 @@ if uploaded_file:
             context = retrieve_context(question, chunks, index)
             client = load_hf_client()
             prompt = f"[INST] Use the following context to answer the question:\n\n{context}\n\nQuestion: {question}\nAnswer: [/INST]"
-            response = client.text_generation(prompt, max_new_tokens=200, temperature=0.7)
+            response = client.conversational(prompt, max_new_tokens=200, temperature=0.7)
             st.markdown("### ✅ Answer:")
             st.write(response.strip())
-
     os.remove(tmp_path)
 
 # test
