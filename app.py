@@ -84,7 +84,7 @@ if uploaded_file:
             context = retrieve_context(question, chunks, index)
             client = load_hf_client()
             prompt = f"[INST] Use the following context to answer the question:\n\n{context}\n\nQuestion: {question}\nAnswer: [/INST]"
-            response = client.chat.completions.create(prompt, max_new_tokens=200, temperature=0.7)
+            response = client.chat.completions.create(prompt, max_tokens=200, temperature=0.7)
             st.markdown("### ✅ Answer:")
             st.write(response.strip())
     os.remove(tmp_path)
