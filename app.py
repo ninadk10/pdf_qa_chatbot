@@ -7,18 +7,8 @@ from huggingface_hub import InferenceClient
 import tempfile
 import os
 
-
-from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
-
-# # Get the token from the environment variable
-# hf_token = os.environ.get("HF_TOKEN")
-
-# if hf_token is None:
-#     raise ValueError("Hugging Face token not found. Please ensure it's in a .env file or set as an environment variable.")
-
 MODEL_ID = "HuggingFaceH4/zephyr-7b-beta"
 
-# Load models
 @st.cache_resource
 def load_embedder():
     return SentenceTransformer("all-MiniLM-L6-v2")
@@ -32,21 +22,16 @@ def load_hf_client():
         st.stop()
     else:
         st.info("Step 2: HF_TOKEN found in environment.")
-        # st.write(f"HF Token length: {len(hf_token)}") # You can print length to confirm it's not empty, but don't print actual token!
 
-    model_id = MODEL_ID # Still stick with gpt2 for now
-
-    st.info(f"Step 3: Attempting to load Hugging Face Inference Client for model: `{model_id}`")
-
+    st.info(f"Step 3: Attempting to load Hugging Face Inference Client for model: `{MODEL_ID}`")
     try:
-        client = InferenceClient(provider="featherless-ai", model=model_id, token=hf_token)
-        st.success(f"Step 4: Successfully initialized Hugging Face Inference Client for `{model_id}`")
+        client = InferenceClient(provider="featherless-ai", model=MODEL_ID, token=hf_token)
+        st.success(f"Step 4: Successfully initialized Hugging Face Inference Client for `{MODEL_ID}`")
         return client
     except Exception as e:
-        st.error(f"Step 5: Failed to initialize Hugging Face Inference Client for `{model_id}`: {e}")
+        st.error(f"Step 5: Failed to initialize Hugging Face Inference Client for `{MODEL_ID}`: {e}")
         st.stop()
 
-# Build FAISS index
 @st.cache_resource
 def build_index(pdf_path):
     embedder = load_embedder()
@@ -58,22 +43,17 @@ def build_index(pdf_path):
     index.add(np.array(embeddings))
     return chunks, index
 
-# Retrieve context from FAISS
 def retrieve_context(question, chunks, index):
     embedder = load_embedder()
     q_vec = embedder.encode([question])
     D, I = index.search(np.array(q_vec), k=3)
     return " ".join([chunks[i] for i in I[0]])
 
-
-# Initialize conversation history
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = [
         {"role": "system", "content": "You are a helpful assistant that answers questions based on PDF context."}
     ]
 
-
-# Streamlit UI
 st.title("PDF Q&A Bot (Hugging Face Hosted Model)")
 uploaded_file = st.file_uploader("Upload a PDF", type="pdf")
 
@@ -93,17 +73,23 @@ if uploaded_file:
             augmented_question = f"Context:\n{context}\n\nQuestion:\n{question}"
             st.session_state.chat_history.append({"role": "user", "content": augmented_question})
 
+            # Format prompt for Zephyr-7B style chat
+            prompt = ""
+            for msg in st.session_state.chat_history:
+                if msg["role"] == "user":
+                    prompt += f"<|user|>\n{msg['content']}\n"
+                elif msg["role"] == "assistant":
+                    prompt += f"<|assistant|>\n{msg['content']}\n"
+            prompt += "<|assistant|>\n"
+
             client = load_hf_client()
-            prompt = f"[INST] Use the following context to answer the question:\n\n{context}\n\nQuestion: {question}\nAnswer: [/INST]"
-            response = client.chat.completions.create(prompt, max_tokens=200, temperature=0.7)
-            # response = client.conversational(messages=st.session_state.chat_history)
-            assistant_reply = response["choices"][0]["message"]["content"]
+            response = client.text_generation(prompt, max_new_tokens=200, temperature=0.7)
+            assistant_reply = response.strip()
+
             st.session_state.chat_history.append({"role": "assistant", "content": assistant_reply})
+
             for msg in st.session_state.chat_history:
                 if msg["role"] != "system":
                     st.markdown(f"**{msg['role'].capitalize()}**: {msg['content']}")
-            # st.markdown("### Answer:")
-            # st.write(response.strip())
-    os.remove(tmp_path)
 
-# test
+    os.remove(tmp_path)
