@@ -95,8 +95,8 @@ if uploaded_file:
 
             client = load_hf_client()
             prompt = f"[INST] Use the following context to answer the question:\n\n{context}\n\nQuestion: {question}\nAnswer: [/INST]"
-            # response = client.chat.completions.create(prompt, max_tokens=200, temperature=0.7)
-            response = client.conversational(messages=st.session_state.chat_history)
+            response = client.chat.completions.create(prompt, max_tokens=200, temperature=0.7)
+            # response = client.conversational(messages=st.session_state.chat_history)
             assistant_reply = response["choices"][0]["message"]["content"]
             st.session_state.chat_history.append({"role": "assistant", "content": assistant_reply})
             for msg in st.session_state.chat_history:
