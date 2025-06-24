@@ -70,23 +70,17 @@ if uploaded_file:
     if question:
         with st.spinner("Generating answer..."):
             context = retrieve_context(question, chunks, index)
-            augmented_question = f"Context:\n{context}\n\nQuestion:\n{question}"
-            st.session_state.chat_history.append({"role": "user", "content": augmented_question})
-
-            # Format prompt for Zephyr-7B style chat
-            prompt = ""
-            for msg in st.session_state.chat_history:
-                if msg["role"] == "user":
-                    prompt += f"<|user|>\n{msg['content']}\n"
-                elif msg["role"] == "assistant":
-                    prompt += f"<|assistant|>\n{msg['content']}\n"
-            prompt += "<|assistant|>\n"
+            full_prompt = f"Context:\n{context}\n\nQuestion:\n{question}"
+            st.session_state.chat_history.append({"role": "user", "content": full_prompt})
 
             client = load_hf_client()
-            response = client.text_generation(prompt, max_new_tokens=200, temperature=0.7)
-            assistant_reply = response.strip()
-
-            st.session_state.chat_history.append({"role": "assistant", "content": assistant_reply})
+            try:
+                response = client.conversational(messages=st.session_state.chat_history)
+                assistant_reply = response["choices"][0]["message"]["content"]
+                st.session_state.chat_history.append({"role": "assistant", "content": assistant_reply})
+            except Exception as e:
+                st.error(f"API call failed: {e}")
+                st.stop()
 
             for msg in st.session_state.chat_history:
                 if msg["role"] != "system":
