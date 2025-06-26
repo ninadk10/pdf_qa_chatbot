@@ -3,34 +3,18 @@ import fitz  # PyMuPDF
 import faiss
 import numpy as np
 from sentence_transformers import SentenceTransformer
-from huggingface_hub import InferenceClient
 import tempfile
 import os
+import requests
 
-# Use a model that supports text-generation (Falcon-7B Instruct works)
-MODEL_ID = "tiiuae/falcon-7b-instruct"
+# Ollama config
+OLLAMA_MODEL = "mistral"  # or llama3, phi3, etc.
+OLLAMA_URL = "http://localhost:11434/api/generate"
 
 # Load sentence embedding model
 @st.cache_resource
 def load_embedder():
     return SentenceTransformer("all-MiniLM-L6-v2")
-
-# Load Hugging Face inference client
-@st.cache_resource
-def load_hf_client():
-    st.info("Loading Hugging Face Inference Client...")
-    hf_token = os.environ.get("HF_TOKEN")
-    if hf_token is None:
-        st.error("Hugging Face token not found. Please set the HF_TOKEN environment variable.")
-        st.stop()
-
-    try:
-        client = InferenceClient(token=hf_token)
-        st.success(f"Inference Client initialized for model `{MODEL_ID}`")
-        return client
-    except Exception as e:
-        st.error(f"Failed to initialize client: {e}")
-        st.stop()
 
 # Build FAISS index from PDF
 @st.cache_resource
@@ -51,6 +35,19 @@ def retrieve_context(question, chunks, index):
     D, I = index.search(np.array(q_vec), k=3)
     return " ".join([chunks[i] for i in I[0]])
 
+# Query Ollama locally
+def ask_ollama(prompt, model=OLLAMA_MODEL):
+    try:
+        response = requests.post(OLLAMA_URL, json={
+            "model": model,
+            "prompt": prompt,
+            "stream": False
+        })
+        response.raise_for_status()
+        return response.json()["response"].strip()
+    except Exception as e:
+        return f"❌ Error querying Ollama: {e}"
+
 # Initialize session state for chat
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = [
@@ -58,7 +55,7 @@ if "chat_history" not in st.session_state:
     ]
 
 # Streamlit UI
-st.title("📄 PDF Q&A Bot (Hugging Face Hosted Model)")
+st.title("📄 PDF Q&A Bot (Local Ollama Model)")
 uploaded_file = st.file_uploader("Upload a PDF", type="pdf")
 
 if uploaded_file:
@@ -77,14 +74,7 @@ if uploaded_file:
             st.session_state.chat_history.append({"role": "user", "content": question})
 
             prompt = f"Use the following context to answer the question:\n\n{context}\n\nQuestion: {question}\nAnswer:"
-            client = load_hf_client()
-            resp = client.text_generation(
-                model=MODEL_ID,
-                prompt=prompt,
-                max_new_tokens=256,
-                temperature=0.7
-            )
-            reply = resp.strip()
+            reply = ask_ollama(prompt)
 
             st.session_state.chat_history.append({"role": "assistant", "content": reply})
             for msg in st.session_state.chat_history:
