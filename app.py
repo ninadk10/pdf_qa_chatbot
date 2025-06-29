@@ -7,6 +7,10 @@ import tempfile
 import os
 import requests
 
+# model = SentenceTransformer("all-MiniLM-L6-v2")  # if cloned in working dir
+
+
+
 # Ollama config
 OLLAMA_MODEL = "mistral"  # or llama3, phi3, etc.
 OLLAMA_URL = "http://localhost:11434/api/generate"
