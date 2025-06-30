@@ -38,7 +38,7 @@ At a high level, the chatbot pipeline involves:
 
 ---
 
-## 🧰 Tech Stack
+## Tech Stack
 
 | Component        | Library / Tool                      |
 |------------------|-------------------------------------|
@@ -51,7 +51,7 @@ At a high level, the chatbot pipeline involves:
 
 ---
 
-## 🚀 Quickstart
+## Quickstart
 
 ### 1. Clone the repository
 ```bash
