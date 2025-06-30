@@ -7,15 +7,13 @@ import tempfile
 import os
 import requests
 
-# model = SentenceTransformer("all-MiniLM-L6-v2")  # if cloned in working dir
 
-
-
-# Ollama config
-OLLAMA_MODEL = "mistral"  # or llama3, phi3, etc.
+# Run Ollama before running this file. Set config here to match the locally running model and provide the correct url. Usually the model is running on 11434 local port
+OLLAMA_MODEL = "mistral"  
 OLLAMA_URL = "http://localhost:11434/api/generate"
 
-# Load sentence embedding model
+# Load sentence embedding model, in this case we are using a locally running all-MiniLM-L6-v2 model
+# Cache large resources
 @st.cache_resource
 def load_embedder():
     return SentenceTransformer("all-MiniLM-L6-v2")
@@ -25,7 +23,9 @@ def load_embedder():
 def build_index(pdf_path):
     embedder = load_embedder()
     doc = fitz.open(pdf_path)
+    # parse in text from pdf using fitz
     text = " ".join([page.get_text() for page in doc])
+    # breakdown the text into chunks of 500 and iterate through these batches
     chunks = [text[i:i+500] for i in range(0, len(text), 500)]
     embeddings = embedder.encode(chunks, batch_size=16, show_progress_bar=True)
     index = faiss.IndexFlatL2(384)
@@ -50,16 +50,16 @@ def ask_ollama(prompt, model=OLLAMA_MODEL):
         response.raise_for_status()
         return response.json()["response"].strip()
     except Exception as e:
-        return f"❌ Error querying Ollama: {e}"
+        return f"Error querying Ollama: {e}"
 
-# Initialize session state for chat
+# Initialise session state for chat
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = [
         {"role": "system", "content": "You are a helpful assistant that answers questions based on PDF content."}
     ]
 
 # Streamlit UI
-st.title("📄 PDF Q&A Bot (Local Ollama Model)")
+st.title(f"PDF Q&A Bot (Local {OLLAMA_MODEL} Model)")
 uploaded_file = st.file_uploader("Upload a PDF", type="pdf")
 
 if uploaded_file:
@@ -69,7 +69,7 @@ if uploaded_file:
 
     with st.spinner("Reading and indexing PDF..."):
         chunks, index = build_index(tmp_path)
-    st.success("✅ PDF processed. Ask your question below.")
+    st.success("PDF processed. Ask your question below.")
 
     question = st.text_input("Enter your question:")
     if question:
